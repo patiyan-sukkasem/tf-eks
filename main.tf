@@ -79,6 +79,23 @@ resource "aws_iam_policy" "secrets_manager_policy" {
         "secretsmanager:ListSecretVersionIds"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject,",
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::my-web-assets"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "SQS:send",
+        "SQS:recive",
+        "SQS:delete"
+      ],
+      "Resource": "arn:aws:sqs:ap-southeast-1:123456789123:lms-import-data"
     }
   ]
 }
