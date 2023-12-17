@@ -43,6 +43,52 @@ module "vpc" {
   }
 }
 
+resource "aws_iam_role" "secrets_manager_role" {
+  name = "secrets_manager_role"
+  
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "secretsmanager.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "secrets_manager_policy" {
+  name        = "secrets_manager_policy"
+  description = "Policy for accessing Secrets Manager"
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "secretsmanager:GetSecretValue",
+        "secretsmanager:ListSecrets",
+        "secretsmanager:DescribeSecret",
+        "secretsmanager:ListSecretVersionIds"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_attachment" {
+  policy_arn = aws_iam_policy.secrets_manager_policy.arn
+  role       = aws_iam_role.secrets_manager_role.name
+}
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.5.1"
@@ -64,7 +110,7 @@ module "eks" {
       name = "node-group-t3large"
 
       instance_types = ["t3.large"]
-
+      node_role_arn   = aws_iam_role.secrets_manager_role.arn
       min_size     = 1
       max_size     = 5
       desired_size = 4
@@ -74,7 +120,7 @@ module "eks" {
       name = "node-group-t3xlarge"
 
       instance_types = ["t3.xlarge"]
-
+      node_role_arn   = aws_iam_role.example.arn
       min_size     = 1
       max_size     = 5
       desired_size = 3
